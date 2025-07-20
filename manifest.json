@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "NoSpoiler Plugin",
+  "version": "0.1",
+  "description": "Hide and protect from spoilers on Youtube, Twitter, Reddit, and more." ,
+  "permissions": ["storage", "activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "128": "icon.png"
+    }
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+
+  ],
+  "background" : {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "128": "icon.png"
+  }
+
+}
