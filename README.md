@@ -29,6 +29,7 @@ Hide spoilers across YouTube, Twitter/X, Reddit, and more — **your feed, spoil
 
 
 🗺️ Roadmap
+
 ✅ Basic spoiler blocking
 
 ✅ Click-to-reveal functionality
