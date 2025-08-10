@@ -1,60 +1,98 @@
-chrome.storage.local.get({ keywords: [] },({ keywords }) => {
-    if (!keywords || keywords.length === 0) return;
+let observer = null;
 
-    const observer = new MutationObserver(() => {
-        scanForSpoiler(document.body, keywords);
-    });
+function enableBlocking(keywords) {
+  if (!keywords || keywords.length === 0) return;
+  disableBlocking(); // Ensure no duplicate observers
 
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-    });
+  observer = new MutationObserver(() => {
+    scanBlocks(keywords);
+  });
 
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
 
-
-    // Initial scan for SPOILER
-    scanForSpoiler(document.body, keywords);
-});
-
-function scanForSpoiler(root, keywords) {
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    let node;
-    while ((node = walker.nextNode())) {
-        if(!node || !node.nodeValue) continue;
-
-        const text = node.nodeValue;
-        const lowerText = text.toLowerCase();
-
-        if (keywords.some(k => lowerText.includes(k))) {
-            const parent = node.parentNode;
-
-            if(!parent || parent.classList?.contains('nospoiler-blocked')) continue;
-
-            const spoilerContainer = document.createElement('span');
-            spoilerContainer.className = 'nospoiler-blocked';
-            spoilerContainer.style.background = '#000';
-            spoilerContainer.style.color = '#fff';
-            spoilerContainer.style.padding = '2px 6px';
-            spoilerContainer.style.borderRadius = '4px';
-            spoilerContainer.style.cursor = 'pointer';
-            spoilerContainer.style.fontStyle = 'italic';
-            spoilerContainer.style.userSelect = 'none';
-            spoilerContainer.textContent = '[SPOILER HIDDEN]  (click to reveal)';
-
-            const originalText = text;
-
-            spoilerContainer.addEventListener('click', () => {
-                spoilerContainer.textContent = originalText;
-                spoilerContainer.style.background = 'transparent';
-                spoilerContainer.style.color = 'inherit'
-                spoilerContainer.style.fontStyle = 'normal';
-                spoilerContainer.style.cursor = 'text'
-            });
-
-
-            parent.replaceChild(spoilerContainer, node);
-        }
-    }
-
+  scanBlocks(keywords);
 }
+
+function disableBlocking() {
+  if (observer) observer.disconnect();
+  observer = null;
+
+  // Restore everything to its original state
+  document.querySelectorAll('.nospoiler-blocked').forEach((el) => {
+    el.style.filter = el.dataset.originalFilter || 'none';
+    el.style.cursor = el.dataset.originalCursor || 'auto';
+    el.classList.remove('nospoiler-blocked');
+  });
+}
+
+function scanBlocks(keywords) {
+  let blocks = [];
+
+  // YouTube
+  if (location.hostname.includes('youtube.com')) {
+    blocks = document.querySelectorAll('#dismissible.style-scope.ytd-video-renderer');
+  }
+  // Twitter (X)
+  else if (location.hostname.includes('twitter.com') || location.hostname.includes('x.com')) {
+    blocks = document.querySelectorAll('article');
+  }
+  // Reddit
+  else if (location.hostname.includes('reddit.com')) {
+    blocks = document.querySelectorAll('.Post, .Comment');
+  }
+  // GitHub
+  else if (location.hostname.includes('github.com')) {
+    blocks = document.querySelectorAll('.comment-body');
+  }
+  // Fallback
+  else {
+    blocks = document.querySelectorAll('p, div, article, span');
+  }
+
+  blocks.forEach((el) => {
+    if (
+      el.innerText &&
+      keywords.some((k) => el.innerText.toLowerCase().includes(k)) &&
+      !el.classList.contains('nospoiler-blocked')
+    ) {
+      el.dataset.originalFilter = el.style.filter || '';
+      el.dataset.originalCursor = el.style.cursor || '';
+      el.classList.add('nospoiler-blocked');
+
+      el.style.filter = 'blur(6px)';
+      el.style.cursor = 'pointer';
+      el.title = '🕵️‍♂️ SPOILER (click to reveal)';
+
+      el.addEventListener('click', () => {
+        el.style.filter = 'none';
+        el.style.cursor = el.dataset.originalCursor || 'auto';
+      });
+    }
+  });
+}
+
+function initBlocking() {
+  chrome.storage.local.get(
+    { keywords: [], blockingEnabled: true, siteSettings: {} },
+    ({ keywords, blockingEnabled, siteSettings }) => {
+      const domain = location.hostname.replace('www.', '');
+
+      // ✅ If global toggle OFF or site toggle OFF → disable immediately
+      if (!blockingEnabled || siteSettings[domain] === false) {
+        disableBlocking();
+        return;
+      }
+
+      enableBlocking(keywords);
+    }
+  );
+}
+
+// ✅ Re-run whenever settings change
+chrome.storage.onChanged.addListener(initBlocking);
+
+// ✅ Run on page load
+initBlocking();
