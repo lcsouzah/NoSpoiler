@@ -20,10 +20,8 @@ function disableBlocking() {
   if (observer) observer.disconnect();
   observer = null;
 
-  // Restore everything to its original state
   document.querySelectorAll('.nospoiler-blocked').forEach((el) => {
-    el.style.filter = el.dataset.originalFilter || 'none';
-    el.style.cursor = el.dataset.originalCursor || 'auto';
+
     el.classList.remove('nospoiler-blocked');
   });
 }
@@ -53,32 +51,37 @@ function scanBlocks(keywords) {
   }
 
   blocks.forEach((el) => {
+    const text = el.textContent?.toLowerCase();
     if (
-      el.innerText &&
-      keywords.some((k) => el.innerText.toLowerCase().includes(k)) &&
+      text &&
+      keywords.some((k) => text.includes(k)) &&
       !el.classList.contains('nospoiler-blocked')
     ) {
-      el.dataset.originalFilter = el.style.filter || '';
-      el.dataset.originalCursor = el.style.cursor || '';
+
       el.classList.add('nospoiler-blocked');
 
-      el.style.filter = 'blur(6px)';
-      el.style.cursor = 'pointer';
       el.title = '🕵️‍♂️ SPOILER (click to reveal)';
 
-      el.addEventListener('click', () => {
-        el.style.filter = 'none';
-        el.style.cursor = el.dataset.originalCursor || 'auto';
-      });
+      const handleClick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        el.classList.remove('nospoiler-blocked');
+
+        el.removeEventListener('click', handleClick);
+      };
+
+      el.addEventListener('click', handleClick);
     }
   });
 }
+
 
 function initBlocking() {
   chrome.storage.local.get(
     { keywords: [], blockingEnabled: true, siteSettings: {} },
     ({ keywords, blockingEnabled, siteSettings }) => {
-      const domain = location.hostname.replace('www.', '');
+      const parts = location.hostname.split('.');
+      const domain = parts.slice(-2).join('.');
 
       // ✅ If global toggle OFF or site toggle OFF → disable immediately
       if (!blockingEnabled || siteSettings[domain] === false) {
