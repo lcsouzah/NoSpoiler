@@ -53,9 +53,10 @@ function scanBlocks(keywords) {
   }
 
   blocks.forEach((el) => {
+    const text = el.textContent?.toLowerCase();
     if (
-      el.innerText &&
-      keywords.some((k) => el.innerText.toLowerCase().includes(k)) &&
+      text &&
+      keywords.some((k) => text.includes(k)) &&
       !el.classList.contains('nospoiler-blocked')
     ) {
       el.dataset.originalFilter = el.style.filter || '';
@@ -66,19 +67,26 @@ function scanBlocks(keywords) {
       el.style.cursor = 'pointer';
       el.title = '🕵️‍♂️ SPOILER (click to reveal)';
 
-      el.addEventListener('click', () => {
+      const handleClick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
         el.style.filter = 'none';
         el.style.cursor = el.dataset.originalCursor || 'auto';
-      });
+        el.removeEventListener('click', handleClick);
+      };
+
+      el.addEventListener('click', handleClick);
     }
   });
 }
+
 
 function initBlocking() {
   chrome.storage.local.get(
     { keywords: [], blockingEnabled: true, siteSettings: {} },
     ({ keywords, blockingEnabled, siteSettings }) => {
-      const domain = location.hostname.replace('www.', '');
+      const parts = location.hostname.split('.');
+      const domain = parts.slice(-2).join('.');
 
       // ✅ If global toggle OFF or site toggle OFF → disable immediately
       if (!blockingEnabled || siteSettings[domain] === false) {
