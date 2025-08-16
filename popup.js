@@ -50,13 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-    // Add keyword when pressing Enter in the input
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        addBtn.click();
-      }
-    });
-
   // Clear all keywords
   clearBtn.addEventListener('click', () => {
     chrome.storage.local.set({ keywords: [] }, () => {

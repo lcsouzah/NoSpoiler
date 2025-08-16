@@ -53,12 +53,11 @@ function scanBlocks(keywords) {
   }
 
   blocks.forEach((el) => {
-    const text = el.textContent?.toLowerCase();
     if (
-      text &&
-      keywords.some((k) => text.includes(k)) &&
+      el.innerText &&
+      keywords.some((k) => el.innerText.toLowerCase().includes(k)) &&
       !el.classList.contains('nospoiler-blocked')
-    )  {
+    ) {
       el.dataset.originalFilter = el.style.filter || '';
       el.dataset.originalCursor = el.style.cursor || '';
       el.classList.add('nospoiler-blocked');
@@ -79,8 +78,7 @@ function initBlocking() {
   chrome.storage.local.get(
     { keywords: [], blockingEnabled: true, siteSettings: {} },
     ({ keywords, blockingEnabled, siteSettings }) => {
-      const parts = location.hostname.split('.');
-      const domain = parts.slice(-2).join('.');
+      const domain = location.hostname.replace('www.', '');
 
       // ✅ If global toggle OFF or site toggle OFF → disable immediately
       if (!blockingEnabled || siteSettings[domain] === false) {
