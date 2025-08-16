@@ -1,1 +1,0 @@
-// Reserved for future updates (e.g., syncing settings or advanced logic)
