@@ -1,11 +1,22 @@
 let observer = null;
+let scanFrame = null;
+
+function scheduleScan(keywords) {
+  if (scanFrame) cancelAnimationFrame(scanFrame);
+  scanFrame = requestAnimationFrame(() => {
+    scanFrame = null;
+    scanBlocks(keywords);
+  });
+}
+
+
 
 function enableBlocking(keywords) {
   if (!keywords || keywords.length === 0) return;
   disableBlocking(); // Ensure no duplicate observers
 
   observer = new MutationObserver(() => {
-    scanBlocks(keywords);
+    scheduleScan(keywords);
   });
 
   observer.observe(document.body, {
@@ -19,6 +30,11 @@ function enableBlocking(keywords) {
 function disableBlocking() {
   if (observer) observer.disconnect();
   observer = null;
+
+    if (scanFrame) {
+      cancelAnimationFrame(scanFrame);
+      scanFrame = null;
+    }
 
   document.querySelectorAll('.nospoiler-blocked').forEach((el) => {
 
