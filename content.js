@@ -25,8 +25,9 @@ function scheduleScan(keywords) {
 
 
 function enableBlocking(keywords) {
-  if (!keywords || keywords.length === 0) return;
-  disableBlocking(); // Ensure no duplicate observers
+    disableBlocking(); // Ensure no duplicate observers and clear previous blocks
+    if (!keywords || keywords.length === 0) return;
+
 
   observer = new MutationObserver(() => {
     scheduleScan(keywords);
