@@ -21,7 +21,10 @@
         "<all_urls>"
       ],
       "js": [
-        "content.js"
+        {
+          "file": "content.js",
+          "type": "module"
+        }
       ],
       "css": [
         "content.css"
