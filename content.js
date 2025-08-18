@@ -54,6 +54,7 @@ function disableBlocking() {
     cleanupListener(el);
 
     el.classList.remove('nospoiler-blocked');
+    el.removeAttribute('title');
   });
 }
 
@@ -73,13 +74,14 @@ function scanBlocks(keywords) {
 
       el.classList.add('nospoiler-blocked');
 
-      el.title = '🕵️‍♂️ SPOILER (click to reveal)';
+      el.setAttribute('title',  '🕵️‍♂️ SPOILER (click to reveal)');
 
       const handleClick = (event) => {
         event.preventDefault();
         event.stopPropagation();
         cleanupListener(el);
         el.classList.remove('nospoiler-blocked');
+        el.removeAttribute('title');
       };
       clickHandlers.set(el, handleClick);
       el.addEventListener('click', handleClick);
