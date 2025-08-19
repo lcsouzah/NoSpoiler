@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "NoSpoiler Plugin",
-  "version": "0.3",
-  "version_name": "NoSpoiler – v0.3-dev build",
+  "version": "0.3.1",
+  "version_name": "NoSpoiler – v0.3.1-dev build",
   "description": "Hide and protect from spoilers on Youtube, Twitter, Reddit, and more.",
   "permissions": [
     "storage"
@@ -26,12 +26,9 @@
         "*://*.reddit.com/*",
         "*://*.github.com/*"
       ],
-      "js": [
-        {
-          "file": "content.js",
-          "type": "module"
-        }
-      ],
+      "js": ["content.js"],
+
+
       "css": [
         "content.css"
       ]
