@@ -18,6 +18,7 @@ Hide spoilers across YouTube, Twitter/X, Reddit, and more — **your feed, spoil
 1. **Download or Clone** this repo:
    ```bash
    git clone https://github.com/lcsouzah/NoSpoiler.git
+   ```
 
 2. Open chrome://extensions/ or brave://extensions/
 

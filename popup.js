@@ -8,7 +8,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Load stored settings
   chrome.storage.local.get(
-    { keywords: [], blockingEnabled: true, siteSettings: {} },
+    {
+      keywords: [],
+      blockingEnabled: true,
+      siteSettings: {
+        'youtube.com': true,
+        'twitter.com': true,
+        'x.com': true,
+        'reddit.com': true,
+        'github.com': true,
+      },
+    },
     (data) => {
       updateList(data.keywords);
       toggleBlocking.checked = data.blockingEnabled;
@@ -27,10 +37,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // Per-site toggles
   siteToggles.forEach((chk) => {
     chk.addEventListener('change', () => {
-      chrome.storage.local.get({ siteSettings: {} }, (data) => {
-        const updatedSites = { ...data.siteSettings, [chk.dataset.site]: chk.checked };
-        chrome.storage.local.set({ siteSettings: updatedSites });
-      });
+      chrome.storage.local.get(
+        {
+          siteSettings: {
+            'youtube.com': true,
+            'twitter.com': true,
+            'x.com': true,
+            'reddit.com': true,
+            'github.com': true,
+          },
+        },
+        (data) => {
+          const updatedSites = { ...data.siteSettings, [chk.dataset.site]: chk.checked };
+          chrome.storage.local.set({ siteSettings: updatedSites });
+        }
+      );
     });
   });
 

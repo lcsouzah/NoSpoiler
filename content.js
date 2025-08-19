@@ -1,11 +1,42 @@
+const SITE_SELECTORS = {
+  'youtube.com': '#dismissible.style-scope.ytd-video-renderer',
+  'twitter.com': 'article',
+  'x.com': 'article',
+  'reddit.com': '.Post, .Comment',
+  'github.com': '.comment-body',
+};
+
 let observer = null;
+let scanFrame = null;
+
+const clickHandlers = new WeakMap();
+
+function cleanupListener(el) {
+  const handler = clickHandlers.get(el);
+  if (handler) {
+    el.removeEventListener('click', handler);
+    clickHandlers.delete(el);
+  }
+  el.removeAttribute('title');
+}
+
+function scheduleScan(keywords) {
+  if (scanFrame) cancelAnimationFrame(scanFrame);
+  scanFrame = requestAnimationFrame(() => {
+    scanFrame = null;
+    scanBlocks(keywords);
+  });
+}
+
+
 
 function enableBlocking(keywords) {
-  if (!keywords || keywords.length === 0) return;
-  disableBlocking(); // Ensure no duplicate observers
+    disableBlocking(); // Ensure no duplicate observers and clear previous blocks
+    if (!keywords || keywords.length === 0) return;
+
 
   observer = new MutationObserver(() => {
-    scanBlocks(keywords);
+    scheduleScan(keywords);
   });
 
   observer.observe(document.body, {
@@ -20,35 +51,24 @@ function disableBlocking() {
   if (observer) observer.disconnect();
   observer = null;
 
+    if (scanFrame) {
+      cancelAnimationFrame(scanFrame);
+      scanFrame = null;
+    }
+
   document.querySelectorAll('.nospoiler-blocked').forEach((el) => {
+    cleanupListener(el);
 
     el.classList.remove('nospoiler-blocked');
+    el.removeAttribute('title');
   });
 }
 
 function scanBlocks(keywords) {
-  let blocks = [];
-
-  // YouTube
-  if (location.hostname.includes('youtube.com')) {
-    blocks = document.querySelectorAll('#dismissible.style-scope.ytd-video-renderer');
-  }
-  // Twitter (X)
-  else if (location.hostname.includes('twitter.com') || location.hostname.includes('x.com')) {
-    blocks = document.querySelectorAll('article');
-  }
-  // Reddit
-  else if (location.hostname.includes('reddit.com')) {
-    blocks = document.querySelectorAll('.Post, .Comment');
-  }
-  // GitHub
-  else if (location.hostname.includes('github.com')) {
-    blocks = document.querySelectorAll('.comment-body');
-  }
-  // Fallback
-  else {
-    blocks = document.querySelectorAll('p, div, article, span');
-  }
+    const parts = location.hostname.split('.');
+    const domain = parts.slice(-2).join('.');
+    const selector = SITE_SELECTORS[domain] || 'p, div, article, span';
+    const blocks = document.querySelectorAll(selector);
 
   blocks.forEach((el) => {
     const text = el.textContent?.toLowerCase();
@@ -60,16 +80,16 @@ function scanBlocks(keywords) {
 
       el.classList.add('nospoiler-blocked');
 
-      el.title = '🕵️‍♂️ SPOILER (click to reveal)';
+      el.setAttribute('title',  '🕵️‍♂️ SPOILER (click to reveal)');
 
       const handleClick = (event) => {
         event.preventDefault();
         event.stopPropagation();
+        cleanupListener(el);
         el.classList.remove('nospoiler-blocked');
-
-        el.removeEventListener('click', handleClick);
+        el.removeAttribute('title');
       };
-
+      clickHandlers.set(el, handleClick);
       el.addEventListener('click', handleClick);
     }
   });
