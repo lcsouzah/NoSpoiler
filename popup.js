@@ -32,33 +32,36 @@ document.addEventListener('DOMContentLoaded', () => {
         'github.com': true,
       },
     },
-    (data) => {
-      updateList(data.keywords);
-      toggleBlocking.checked = data.blockingEnabled;
-
-    chrome.storage.local.set({ blockingEnabled: toggleBlocking.checked });
-  });
-
-  // Per-site toggles
-  siteToggles.forEach((chk) => {
-    chk.addEventListener('change', () => {
-      chrome.storage.local.get(
-        {
-          siteSettings: {
-            'youtube.com': true,
-            'twitter.com': true,
-            'x.com': true,
-            'reddit.com': true,
-            'github.com': true,
-          },
-        },
         (data) => {
-          const updatedSites = { ...data.siteSettings, [chk.dataset.site]: chk.checked };
-          chrome.storage.local.set({ siteSettings: updatedSites });
-        }
-      );
-    });
-  });
+          updateList(data.keywords);
+          toggleBlocking.checked = data.blockingEnabled;
+          siteToggles.forEach((chk) => {
+            const site = chk.dataset.site;
+            chk.checked = data.siteSettings[site];
+          });
+          chrome.storage.local.set({ blockingEnabled: toggleBlocking.checked });
+      });
+
+      // Per-site toggles
+      siteToggles.forEach((chk) => {
+        chk.addEventListener('change', () => {
+          chrome.storage.local.get(
+            {
+              siteSettings: {
+                'youtube.com': true,
+                'twitter.com': true,
+                'x.com': true,
+                'reddit.com': true,
+                'github.com': true,
+              },
+            },
+            (data) => {
+              const updatedSites = { ...data.siteSettings, [chk.dataset.site]: chk.checked };
+              chrome.storage.local.set({ siteSettings: updatedSites });
+            }
+          );
+        });
+      });
 
   // Add new keyword
     addBtn.addEventListener('click', () => {

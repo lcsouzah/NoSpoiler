@@ -6,11 +6,14 @@ const SITE_SELECTORS = {
   'github.com': '.comment-body',
 };
 
-
 let observer = null;
 let scanFrame = null;
 
 const clickHandlers = new WeakMap();
+
+function stem(word) {
+  return word.replace(/(ing|ed|s)$/i, '');
+}
 
 function cleanupListener(el) {
   const handler = clickHandlers.get(el);
@@ -34,10 +37,10 @@ function scheduleScan(keywords) {
 function enableBlocking(keywords) {
     disableBlocking(); // Ensure no duplicate observers and clear previous blocks
     if (!keywords || keywords.length === 0) return;
-
+  const stemmed = keywords.map((k) => stem(k));
 
   observer = new MutationObserver(() => {
-    scheduleScan(keywords);
+    scheduleScan(stemmed);
   });
 
   observer.observe(document.body, {
@@ -45,7 +48,7 @@ function enableBlocking(keywords) {
     subtree: true,
   });
 
-  scanBlocks(keywords);
+  scanBlocks(stemmed);
 }
 
 function disableBlocking() {
@@ -65,18 +68,6 @@ function disableBlocking() {
   });
 }
 
-function stem(word) {
-  word = word.toLowerCase();
-  if (word.endsWith('s') && word.length > 1) {
-    word = word.slice(0, -1);
-  }
-  for (const suffix of ['ing', 'er', 'ed']) {
-    if (word.endsWith(suffix)) {
-      word = word.slice(0, -suffix.length);
-    }
-  }
-  return word;
-}
 
 function scanBlocks(keywords) {
     const parts = location.hostname.split('.');
