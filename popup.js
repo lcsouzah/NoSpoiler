@@ -19,49 +19,54 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleBlocking = document.getElementById('toggleBlocking');
   const siteToggles = document.querySelectorAll('#siteToggles input[type="checkbox"]');
 
-  // Load stored settings
-  chrome.storage.local.get(
-    {
-      keywords: [],
-      blockingEnabled: true,
-      siteSettings: {
-        'youtube.com': true,
-        'twitter.com': true,
-        'x.com': true,
-        'reddit.com': true,
-        'github.com': true,
+   // Load stored settings
+      chrome.storage.local.get(
+      {
+        keywords: [],
+        blockingEnabled: true,
+        siteSettings: {
+          'youtube.com': true,
+          'twitter.com': true,
+          'x.com': true,
+          'reddit.com': true,
+          'github.com': true,
+        },
       },
-    },
-        (data) => {
-          updateList(data.keywords);
-          toggleBlocking.checked = data.blockingEnabled;
-          siteToggles.forEach((chk) => {
-            const site = chk.dataset.site;
-            chk.checked = data.siteSettings[site];
+          (data) => {
+            updateList(data.keywords);
+            toggleBlocking.checked = data.blockingEnabled;
+            siteToggles.forEach((chk) => {
+              const site = chk.dataset.site;
+              chk.checked = data.siteSettings[site];
+            });
+            chrome.storage.local.set({ blockingEnabled: toggleBlocking.checked });
           });
-          chrome.storage.local.set({ blockingEnabled: toggleBlocking.checked });
-      });
 
-      // Per-site toggles
-      siteToggles.forEach((chk) => {
-        chk.addEventListener('change', () => {
-          chrome.storage.local.get(
-            {
-              siteSettings: {
-                'youtube.com': true,
-                'twitter.com': true,
-                'x.com': true,
-                'reddit.com': true,
-                'github.com': true,
+          // Save global blocking toggle changes
+          toggleBlocking.addEventListener('change', () => {
+            chrome.storage.local.set({ blockingEnabled: toggleBlocking.checked });
+          });
+
+          // Per-site toggles
+          siteToggles.forEach((chk) => {
+            chk.addEventListener('change', () => {
+              chrome.storage.local.get(
+              {
+                siteSettings: {
+                  'youtube.com': true,
+                  'twitter.com': true,
+                  'x.com': true,
+                  'reddit.com': true,
+                  'github.com': true,
+                },
               },
-            },
-            (data) => {
-              const updatedSites = { ...data.siteSettings, [chk.dataset.site]: chk.checked };
-              chrome.storage.local.set({ siteSettings: updatedSites });
-            }
-          );
+              (data) => {
+                const updatedSites = { ...data.siteSettings, [chk.dataset.site]: chk.checked };
+                chrome.storage.local.set({ siteSettings: updatedSites });
+              }
+            );
+          });
         });
-      });
 
   // Add new keyword
     addBtn.addEventListener('click', () => {
