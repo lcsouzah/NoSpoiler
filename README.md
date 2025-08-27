@@ -1,9 +1,3 @@
-# 🚫 NoSpoiler - Browser Extension
-
-Hide spoilers across YouTube, Twitter/X, Reddit, and more — **your feed, spoiler-free!**
-
----
-
 ## ✨ Features
 
 - 🔒 **Keyword-based blocking** – add any words you want to avoid
@@ -27,6 +21,17 @@ Hide spoilers across YouTube, Twitter/X, Reddit, and more — **your feed, spoil
 4. Click Load Unpacked and select the no_spoiler_plugin folder
 
 5. Add your keywords → enjoy spoiler-free browsing!
+
+
+## 🧪 Tests
+
+Run the stemmer demo:
+
+```bash
+node stemmer.test.js
+```
+
+It asserts that a keyword like `spoiler` matches text such as "spoilers" and "spoiling".
 
 
 🗺️ Roadmap

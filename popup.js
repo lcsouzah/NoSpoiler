@@ -1,3 +1,16 @@
+function stem(word) {
+  word = word.toLowerCase();
+  if (word.endsWith('s') && word.length > 1) {
+    word = word.slice(0, -1);
+  }
+  for (const suffix of ['ing', 'er', 'ed']) {
+    if (word.endsWith(suffix)) {
+      word = word.slice(0, -suffix.length);
+    }
+  }
+  return word;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('keywordInput');
   const addBtn = document.getElementById('addKeyword');
@@ -23,14 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
       updateList(data.keywords);
       toggleBlocking.checked = data.blockingEnabled;
 
-      siteToggles.forEach((chk) => {
-        chk.checked = data.siteSettings[chk.dataset.site] ?? true; // default ON
-      });
-    }
-  );
-
-  // Global toggle
-  toggleBlocking.addEventListener('change', () => {
     chrome.storage.local.set({ blockingEnabled: toggleBlocking.checked });
   });
 
@@ -56,20 +61,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Add new keyword
-  addBtn.addEventListener('click', () => {
-    const keyword = input.value.trim().toLowerCase();
-    if (!keyword) return;
+    addBtn.addEventListener('click', () => {
+      const keyword = stem(input.value.trim());
+      if (!keyword) return;
 
     chrome.storage.local.get({ keywords: [] }, (data) => {
-      if (!data.keywords.includes(keyword)) {
-        const newList = [...data.keywords, keyword];
-        chrome.storage.local.set({ keywords: newList }, () => {
-          updateList(newList);
-          input.value = '';
-        });
-      }
+        if (!data.keywords.includes(keyword)) {
+          const newList = [...data.keywords, keyword];
+          chrome.storage.local.set({ keywords: newList }, () => {
+            updateList(newList);
+            input.value = '';
+          });
+        }
+      });
     });
-  });
 
     // Add keyword when pressing Enter in the input
     input.addEventListener('keydown', (e) => {

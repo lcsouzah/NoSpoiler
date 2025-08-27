@@ -6,6 +6,7 @@ const SITE_SELECTORS = {
   'github.com': '.comment-body',
 };
 
+
 let observer = null;
 let scanFrame = null;
 
@@ -64,6 +65,19 @@ function disableBlocking() {
   });
 }
 
+function stem(word) {
+  word = word.toLowerCase();
+  if (word.endsWith('s') && word.length > 1) {
+    word = word.slice(0, -1);
+  }
+  for (const suffix of ['ing', 'er', 'ed']) {
+    if (word.endsWith(suffix)) {
+      word = word.slice(0, -suffix.length);
+    }
+  }
+  return word;
+}
+
 function scanBlocks(keywords) {
     const parts = location.hostname.split('.');
     const domain = parts.slice(-2).join('.');
@@ -72,11 +86,10 @@ function scanBlocks(keywords) {
 
   blocks.forEach((el) => {
     const text = el.textContent?.toLowerCase();
-    if (
-      text &&
-      keywords.some((k) => text.includes(k)) &&
-      !el.classList.contains('nospoiler-blocked')
-    ) {
+    const tokens = text ? text.split(/\W+/).map(stem) : [];
+    const stems = keywords.map(stem);
+    const hasKeyword = tokens.some((t) => stems.includes(t));
+    if (text && hasKeyword && !el.classList.contains('nospoiler-blocked')) {
 
       el.classList.add('nospoiler-blocked');
 
@@ -94,7 +107,6 @@ function scanBlocks(keywords) {
     }
   });
 }
-
 
 function initBlocking() {
   chrome.storage.local.get(
