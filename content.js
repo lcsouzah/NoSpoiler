@@ -24,11 +24,11 @@ function cleanupListener(el) {
   el.removeAttribute('title');
 }
 
-function scheduleScan(keywords) {
+function scheduleScan(stems) {
   if (scanFrame) cancelAnimationFrame(scanFrame);
   scanFrame = requestAnimationFrame(() => {
     scanFrame = null;
-    scanBlocks(keywords);
+    scanBlocks(stems);
   });
 }
 
@@ -37,10 +37,10 @@ function scheduleScan(keywords) {
 function enableBlocking(keywords) {
     disableBlocking(); // Ensure no duplicate observers and clear previous blocks
     if (!keywords || keywords.length === 0) return;
-  const stemmed = keywords.map((k) => stem(k));
+  const stems = keywords.map((k) => stem(k));
 
   observer = new MutationObserver(() => {
-    scheduleScan(stemmed);
+    scheduleScan(stems);
   });
 
   observer.observe(document.body, {
@@ -48,7 +48,7 @@ function enableBlocking(keywords) {
     subtree: true,
   });
 
-  scanBlocks(stemmed);
+  scanBlocks(stems);
 }
 
 function disableBlocking() {
@@ -69,7 +69,7 @@ function disableBlocking() {
 }
 
 
-function scanBlocks(keywords) {
+function scanBlocks(stems) {
     const parts = location.hostname.split('.');
     const domain = parts.slice(-2).join('.');
     const selector = SITE_SELECTORS[domain] || 'p, div, article, span';
@@ -78,7 +78,6 @@ function scanBlocks(keywords) {
   blocks.forEach((el) => {
     const text = el.textContent?.toLowerCase();
     const tokens = text ? text.split(/\W+/).map(stem) : [];
-    const stems = keywords.map(stem);
     const hasKeyword = tokens.some((t) => stems.includes(t));
     if (text && hasKeyword && !el.classList.contains('nospoiler-blocked')) {
 
