@@ -1,5 +1,5 @@
-const assert = require('assert');
-const stem = require('./stemmer');
+import assert from 'assert';
+import stem from './stemmer.js';
 
 ['spoiler', 'spoilers', 'spoiling'].forEach((word) => {
   assert.strictEqual(stem(word), 'spoil', `${word} should stem to spoil`);

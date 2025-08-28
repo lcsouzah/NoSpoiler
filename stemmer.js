@@ -1,4 +1,4 @@
-function stem(word) {
+export default function stem(word) {
   word = word.toLowerCase();
   if (word.endsWith('s') && word.length > 1) {
     word = word.slice(0, -1);
@@ -10,5 +10,3 @@ function stem(word) {
   }
   return word;
 }
-
-module.exports = stem;

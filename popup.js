@@ -1,4 +1,4 @@
-const stem = require('./stemmer');
+import stem from './stemmer.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('keywordInput');

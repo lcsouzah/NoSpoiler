@@ -1,4 +1,4 @@
-const stem = require('./stemmer');
+import stem from './stemmer.js';
 
 const SITE_SELECTORS = {
   'youtube.com': '#dismissible.style-scope.ytd-video-renderer',
