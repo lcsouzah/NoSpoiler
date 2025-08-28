@@ -8,33 +8,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleBlocking = document.getElementById('toggleBlocking');
   const siteToggles = document.querySelectorAll('#siteToggles input[type="checkbox"]');
 
-   // Load stored settings
-      chrome.storage.local.get(
-      {
-        keywords: [],
-        blockingEnabled: true,
-        siteSettings: {
-          'youtube.com': true,
-          'twitter.com': true,
-          'x.com': true,
-          'reddit.com': true,
-          'github.com': true,
-        },
-      },
-          (data) => {
-            updateList(data.keywords);
-            toggleBlocking.checked = data.blockingEnabled;
-            siteToggles.forEach((chk) => {
-              const site = chk.dataset.site;
-              chk.checked = data.siteSettings[site];
-            });
-            chrome.storage.local.set({ blockingEnabled: toggleBlocking.checked });
-          });
+  // Track current blocking state to avoid redundant writes
+  let currentBlocking = toggleBlocking.checked;
 
-          // Save global blocking toggle changes
-          toggleBlocking.addEventListener('change', () => {
-            chrome.storage.local.set({ blockingEnabled: toggleBlocking.checked });
-          });
+  // Load stored settings
+  chrome.storage.local.get(
+    {
+      keywords: [],
+      blockingEnabled: true,
+      siteSettings: {
+        'youtube.com': true,
+        'twitter.com': true,
+        'x.com': true,
+        'reddit.com': true,
+        'github.com': true,
+      },
+    },
+    (data) => {
+      updateList(data.keywords);
+      currentBlocking = data.blockingEnabled;
+      if (toggleBlocking.checked !== currentBlocking) {
+        toggleBlocking.checked = currentBlocking;
+      }
+      siteToggles.forEach((chk) => {
+        const site = chk.dataset.site;
+        chk.checked = data.siteSettings[site];
+      });
+    }
+  );
+
+  // Save global blocking toggle changes
+  toggleBlocking.addEventListener('change', () => {
+    if (toggleBlocking.checked !== currentBlocking) {
+      currentBlocking = toggleBlocking.checked;
+      chrome.storage.local.set({ blockingEnabled: currentBlocking });
+    }
+  });
 
           // Per-site toggles
           siteToggles.forEach((chk) => {

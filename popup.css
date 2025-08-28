@@ -1,0 +1,21 @@
+body {
+  font-family: Arial, sans-serif;
+  min-width: 250px;
+  padding: 10px;
+}
+
+h1 {
+  font-size: 18px;
+  margin: 0 0 10px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+#keywordInput {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}

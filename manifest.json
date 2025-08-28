@@ -6,7 +6,6 @@
   "description": "Hide and protect from spoilers on Youtube, Twitter, Reddit, and more.",
   "permissions": [
     "storage"
-
   ],
   "action": {
     "default_popup": "popup.html",
@@ -27,11 +26,15 @@
         "*://*.github.com/*"
       ],
       "js": ["content.js"],
-
-
       "css": [
         "content.css"
       ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["popup.css"],
+      "matches": ["<all_urls>"]
     }
   ],
   "icons": {
