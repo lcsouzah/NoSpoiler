@@ -16,21 +16,11 @@
       "128": "icon.png"
     }
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "*://*.youtube.com/*",
-        "*://*.twitter.com/*",
-        "*://*.x.com/*",
-        "*://*.reddit.com/*",
-        "*://*.github.com/*"
-      ],
-      "js": [{ "file": "content.js", "type": "module" }],
-      "css": [
-        "content.css"
-      ]
-    }
-  ],
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"],
+    "type": "module"
+  }],
 
   "icons": {
     "16": "icon16.png",
