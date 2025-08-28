@@ -8,8 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleBlocking = document.getElementById('toggleBlocking');
   const siteToggles = document.querySelectorAll('#siteToggles input[type="checkbox"]');
 
-  // Track current blocking state to avoid redundant writes
-  let currentBlocking = toggleBlocking.checked;
+   // Track current blocking state to avoid redundant writes
+   let currentBlocking = toggleBlocking.checked;
+   let siteSettingsCache = {};
 
   // Load stored settings
   chrome.storage.local.get(
@@ -30,9 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (toggleBlocking.checked !== currentBlocking) {
         toggleBlocking.checked = currentBlocking;
       }
+      siteSettingsCache = data.siteSettings;
       siteToggles.forEach((chk) => {
         const site = chk.dataset.site;
-        chk.checked = data.siteSettings[site];
+        chk.checked = siteSettingsCache[site];
       });
     }
   );
@@ -45,49 +47,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-          // Per-site toggles
-          siteToggles.forEach((chk) => {
-            chk.addEventListener('change', () => {
-              chrome.storage.local.get(
-              {
-                siteSettings: {
-                  'youtube.com': true,
-                  'twitter.com': true,
-                  'x.com': true,
-                  'reddit.com': true,
-                  'github.com': true,
-                },
-              },
-              (data) => {
-                const updatedSites = { ...data.siteSettings, [chk.dataset.site]: chk.checked };
-                chrome.storage.local.set({ siteSettings: updatedSites });
-              }
-            );
-          });
-        });
+  // Per-site toggles
+  siteToggles.forEach((chk) => {
+    chk.addEventListener('change', () => {
+      siteSettingsCache[chk.dataset.site] = chk.checked;
+      chrome.storage.local.set({ siteSettings: siteSettingsCache });
+    });
+  });
 
-  // Add new keyword
-    addBtn.addEventListener('click', () => {
-      const keyword = stem(input.value.trim());
-      if (!keyword) return;
-
-    chrome.storage.local.get({ keywords: [] }, (data) => {
-        if (!data.keywords.includes(keyword)) {
-          const newList = [...data.keywords, keyword];
-          chrome.storage.local.set({ keywords: newList }, () => {
-            updateList(newList);
-            input.value = '';
-          });
+  // Sync UI with storage changes
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.siteSettings) {
+      siteSettingsCache = changes.siteSettings.newValue;
+      siteToggles.forEach((chk) => {
+        const site = chk.dataset.site;
+        const newVal = siteSettingsCache[site];
+        if (chk.checked !== newVal) {
+          chk.checked = newVal;
         }
       });
-    });
+    }
+  });
 
-    // Add keyword when pressing Enter in the input
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        addBtn.click();
+  // Add new keyword
+  addBtn.addEventListener('click', () => {
+    const keyword = stem(input.value.trim());
+    if (!keyword) return;
+
+    chrome.storage.local.get({ keywords: [] }, (data) => {
+      if (!data.keywords.includes(keyword)) {
+        const newList = [...data.keywords, keyword];
+        chrome.storage.local.set({ keywords: newList }, () => {
+          updateList(newList);
+          input.value = '';
+        });
       }
     });
+  });
+
+  // Add keyword when pressing Enter in the input
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      addBtn.click();
+    }
+  });
 
   // Clear all keywords
   clearBtn.addEventListener('click', () => {
