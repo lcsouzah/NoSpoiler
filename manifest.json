@@ -25,11 +25,10 @@
         "*://*.reddit.com/*",
         "*://*.github.com/*"
       ],
-      "js": ["content.js"],
+      "js": [{ "file": "content.js", "type": "module" }],
       "css": [
         "content.css"
-      ],
-      "type": "module"
+      ]
     }
   ],
 
