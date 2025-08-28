@@ -1,121 +1,119 @@
-import stem from './stemmer.js';
+(async () => {
+  const stem = (await import(chrome.runtime.getURL('stemmer.js'))).default;
 
-const SITE_SELECTORS = {
-  'youtube.com': '#dismissible.style-scope.ytd-video-renderer',
-  'twitter.com': 'article',
-  'x.com': 'article',
-  'reddit.com': '.Post, .Comment',
-  'github.com': '.comment-body',
-};
+  const SITE_SELECTORS = {
+    'youtube.com': '#dismissible.style-scope.ytd-video-renderer',
+    'twitter.com': 'article',
+    'x.com': 'article',
+    'reddit.com': '.Post, .Comment',
+    'github.com': '.comment-body',
+  };
 
-let observer = null;
-let scanFrame = null;
+  let observer = null;
+  let scanFrame = null;
 
-const clickHandlers = new WeakMap();
+  const clickHandlers = new WeakMap();
 
-function cleanupListener(el) {
-  const handler = clickHandlers.get(el);
-  if (handler) {
-    el.removeEventListener('click', handler);
-    clickHandlers.delete(el);
+  function cleanupListener(el) {
+    const handler = clickHandlers.get(el);
+    if (handler) {
+      el.removeEventListener('click', handler);
+      clickHandlers.delete(el);
+    }
+    el.removeAttribute('title');
   }
-  el.removeAttribute('title');
-}
 
-function scheduleScan(stems) {
-  if (scanFrame) cancelAnimationFrame(scanFrame);
-  scanFrame = requestAnimationFrame(() => {
-    scanFrame = null;
-    scanBlocks(stems);
-  });
-}
+  function scheduleScan(stems) {
+    if (scanFrame) cancelAnimationFrame(scanFrame);
+    scanFrame = requestAnimationFrame(() => {
+      scanFrame = null;
+      scanBlocks(stems);
+    });
+  }
 
-
-
-function enableBlocking(keywords) {
+  function enableBlocking(keywords) {
     disableBlocking(); // Ensure no duplicate observers and clear previous blocks
     if (!keywords || keywords.length === 0) return;
-  const stems = keywords.map((k) => stem(k));
+    const stems = keywords.map((k) => stem(k));
 
-  observer = new MutationObserver(() => {
-    scheduleScan(stems);
-  });
+    observer = new MutationObserver(() => {
+      scheduleScan(stems);
+    });
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
 
-  scanBlocks(stems);
-}
+    scanBlocks(stems);
+  }
 
-function disableBlocking() {
-  if (observer) observer.disconnect();
-  observer = null;
+  function disableBlocking() {
+    if (observer) observer.disconnect();
+    observer = null;
 
     if (scanFrame) {
       cancelAnimationFrame(scanFrame);
       scanFrame = null;
     }
 
-  document.querySelectorAll('.nospoiler-blocked').forEach((el) => {
-    cleanupListener(el);
+    document.querySelectorAll('.nospoiler-blocked').forEach((el) => {
+      cleanupListener(el);
 
-    el.classList.remove('nospoiler-blocked');
-    el.removeAttribute('title');
-  });
-}
+      el.classList.remove('nospoiler-blocked');
+      el.removeAttribute('title');
+    });
+  }
 
-
-function scanBlocks(stems) {
+  function scanBlocks(stems) {
     const parts = location.hostname.split('.');
     const domain = parts.slice(-2).join('.');
     const selector = SITE_SELECTORS[domain] || 'p, div, article, span';
     const blocks = document.querySelectorAll(selector);
 
-  blocks.forEach((el) => {
-    const text = el.textContent?.toLowerCase();
-    const tokens = text ? text.split(/\W+/).map(stem) : [];
-    const hasKeyword = tokens.some((t) => stems.includes(t));
-    if (text && hasKeyword && !el.classList.contains('nospoiler-blocked')) {
+    blocks.forEach((el) => {
+      const text = el.textContent?.toLowerCase();
+      const tokens = text ? text.split(/\W+/).map(stem) : [];
+      const hasKeyword = tokens.some((t) => stems.includes(t));
+      if (text && hasKeyword && !el.classList.contains('nospoiler-blocked')) {
+        el.classList.add('nospoiler-blocked');
 
-      el.classList.add('nospoiler-blocked');
+        el.setAttribute('title', '🕵️‍♂️ SPOILER (click to reveal)');
 
-      el.setAttribute('title',  '🕵️‍♂️ SPOILER (click to reveal)');
-
-      const handleClick = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        cleanupListener(el);
-        el.classList.remove('nospoiler-blocked');
-        el.removeAttribute('title');
-      };
-      clickHandlers.set(el, handleClick);
-      el.addEventListener('click', handleClick);
-    }
-  });
-}
-
-function initBlocking() {
-  chrome.storage.local.get(
-    { keywords: [], blockingEnabled: true, siteSettings: {} },
-    ({ keywords, blockingEnabled, siteSettings }) => {
-      const parts = location.hostname.split('.');
-      const domain = parts.slice(-2).join('.');
-
-      // ✅ If global toggle OFF or site toggle OFF → disable immediately
-      if (!blockingEnabled || siteSettings[domain] === false) {
-        disableBlocking();
-        return;
+        const handleClick = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          cleanupListener(el);
+          el.classList.remove('nospoiler-blocked');
+          el.removeAttribute('title');
+        };
+        clickHandlers.set(el, handleClick);
+        el.addEventListener('click', handleClick);
       }
+    });
+  }
 
-      enableBlocking(keywords);
-    }
-  );
-}
+  function initBlocking() {
+    chrome.storage.local.get(
+      { keywords: [], blockingEnabled: true, siteSettings: {} },
+      ({ keywords, blockingEnabled, siteSettings }) => {
+        const parts = location.hostname.split('.');
+        const domain = parts.slice(-2).join('.');
 
-// ✅ Re-run whenever settings change
-chrome.storage.onChanged.addListener(initBlocking);
+        // ✅ If global toggle OFF or site toggle OFF → disable immediately
+        if (!blockingEnabled || siteSettings[domain] === false) {
+          disableBlocking();
+          return;
+        }
 
-// ✅ Run on page load
-initBlocking();
+        enableBlocking(keywords);
+      }
+    );
+  }
+
+  // ✅ Re-run whenever settings change
+  chrome.storage.onChanged.addListener(initBlocking);
+
+  // ✅ Run on page load
+  initBlocking();
+})();
