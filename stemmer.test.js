@@ -1,22 +1,8 @@
 const assert = require('assert');
+const stem = require('./stemmer');
 
-function stem(word) {
-  word = word.toLowerCase();
-  if (word.endsWith('s') && word.length > 1) {
-    word = word.slice(0, -1);
-  }
-  for (const suffix of ['ing', 'er', 'ed']) {
-    if (word.endsWith(suffix)) {
-      word = word.slice(0, -suffix.length);
-    }
-  }
-  return word;
-}
-
-const keywords = ['spoiler'].map(stem);
-['spoilers', 'spoiling'].forEach((sample) => {
-  const tokens = sample.toLowerCase().split(/\W+/).map(stem);
-  assert(tokens.some((t) => keywords.includes(t)), `${sample} should match spoiler`);
+['spoiler', 'spoilers', 'spoiling'].forEach((word) => {
+  assert.strictEqual(stem(word), 'spoil', `${word} should stem to spoil`);
 });
 
-console.log('Stemmer test passed: spoiler matches spoilers and spoiling');
+console.log('Stemmer test passed');

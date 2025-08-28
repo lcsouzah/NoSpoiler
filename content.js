@@ -1,3 +1,5 @@
+const stem = require('./stemmer');
+
 const SITE_SELECTORS = {
   'youtube.com': '#dismissible.style-scope.ytd-video-renderer',
   'twitter.com': 'article',
@@ -10,10 +12,6 @@ let observer = null;
 let scanFrame = null;
 
 const clickHandlers = new WeakMap();
-
-function stem(word) {
-  return word.replace(/(ing|ed|s)$/i, '');
-}
 
 function cleanupListener(el) {
   const handler = clickHandlers.get(el);
