@@ -32,12 +32,7 @@
       "type": "module"
     }
   ],
-  "web_accessible_resources": [
-    {
-      "resources": ["popup.css"],
-      "matches": ["<all_urls>"]
-    }
-  ],
+
   "icons": {
     "16": "icon16.png",
     "32": "icon32.png",
